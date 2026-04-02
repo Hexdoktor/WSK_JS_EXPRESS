@@ -1,8 +1,8 @@
 {
-  "name": "vscodeprojects",
+  "name": "WSK_JS_EXPRESS",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,5 +14,8 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.1.0",
     "globals": "^17.4.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }

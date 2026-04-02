@@ -12,10 +12,20 @@ export const getCatById = (req, res) => {
 };
 
 export const addCat = (req, res) => {
-  const newCat = req.body;
-  newCat.cat_id = catItems.length + 1;
+  console.log('FORM DATA:', req.body);
+  console.log('FILE DATA:', req.file);
+
+  const newCat = {
+    cat_id: catItems.length + 1,
+    name: req.body.name,
+    birthdate: req.body.birthdate,
+    weight: req.body.weight,
+    owner: req.body.owner,
+    image: req.file ? req.file.filename : null,
+  };
 
   catItems.push(newCat);
+
   res.status(201).json(newCat);
 };
 

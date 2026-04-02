@@ -1,0 +1,31 @@
+GET http://localhost:3000/api/v1/cats
+
+###
+
+GET http://localhost:3000/api/v1/cats/1
+
+###
+
+POST http://localhost:3000/api/v1/cats
+Content-Type: application/json
+
+{
+  "name": "NewCat",
+  "birthdate": "2022-02-02",
+  "weight": 4.0,
+  "owner": "Juuso",
+  "image": "https://loremflickr.com/320/240/cat"
+}
+
+###
+
+PUT http://localhost:3000/api/v1/cats/1
+Content-Type: application/json
+
+{
+  "name": "UpdatedCat"
+}
+
+###
+
+DELETE http://localhost:3000/api/v1/cats/1

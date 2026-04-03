@@ -1,38 +1,50 @@
-import {catItems} from '../models/catModel.js';
+import promisePool from '../../utils/database.js';
 
-export const getCats = (req, res) => {
-  res.json(catItems);
+import {
+  listAllCats,
+  findCatById,
+  addCat as addCatToDb,
+  modifyCat,
+  removeCat,
+} from '../models/catModel.js';
+
+export const getCats = async (req, res) => {
+  const cats = await listAllCats();
+  res.json(cats);
 };
 
-export const getCatById = (req, res) => {
-  const id = Number(req.params.id);
-  const cat = catItems.find((c) => c.cat_id === id);
-
+export const getCatById = async (req, res) => {
+  const cat = await findCatById(req.params.id);
   cat ? res.json(cat) : res.sendStatus(404);
 };
 
-export const addCat = (req, res) => {
-  console.log('FORM DATA:', req.body);
-  console.log('FILE DATA:', req.file);
+export const getCatsByUser = async (req, res) => {
+  const [rows] = await promisePool.execute(
+    `SELECT * FROM wsk_cats WHERE owner = ?`,
+    [req.params.id]
+  );
+  res.json(rows);
+};
 
-  const newCat = {
-    cat_id: catItems.length + 1,
-    name: req.body.name,
-    birthdate: req.body.birthdate,
+export const addCat = async (req, res) => {
+  const cat = {
+    cat_name: req.body.name,
     weight: req.body.weight,
     owner: req.body.owner,
-    image: req.file ? req.file.filename : null,
+    filename: req.file?.filename || null,
+    birthdate: req.body.birthdate,
   };
 
-  catItems.push(newCat);
-
-  res.status(201).json(newCat);
+  const result = await addCatToDb(cat);
+  result ? res.status(201).json(result) : res.sendStatus(400);
 };
 
-export const updateCat = (req, res) => {
-  res.json({message: 'Cat item updated.'});
+export const updateCat = async (req, res) => {
+  const result = await modifyCat(req.body, req.params.id);
+  result ? res.json(result) : res.sendStatus(400);
 };
 
-export const deleteCat = (req, res) => {
-  res.json({message: 'Cat item deleted.'});
+export const deleteCat = async (req, res) => {
+  const result = await removeCat(req.params.id);
+  result ? res.json(result) : res.sendStatus(400);
 };

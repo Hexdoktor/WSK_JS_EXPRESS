@@ -1,28 +1,32 @@
-import {userItems} from '../models/userModel.js';
+import {
+  listAllUsers,
+  findUserById,
+  addUser as addUserToDb,
+  modifyUser,
+  removeUser,
+} from '../models/userModel.js';
 
-export const getUser = (req, res) => {
-  res.json(userItems);
+export const getUsers = async (req, res) => {
+  const users = await listAllUsers();
+  res.json(users);
 };
 
-export const getUserById = (req, res) => {
-  const id = Number(req.params.id);
-  const user = userItems.find((u) => u.user_id === id);
-
+export const getUserById = async (req, res) => {
+  const user = await findUserById(req.params.id);
   user ? res.json(user) : res.sendStatus(404);
 };
 
-export const addUser = (req, res) => {
-  const newUser = req.body;
-  newUser.user_id = userItems.length + 1;
-
-  userItems.push(newUser);
-  res.status(201).json(newUser);
+export const addUser = async (req, res) => {
+  const result = await addUserToDb(req.body);
+  result ? res.status(201).json(result) : res.sendStatus(400);
 };
 
-export const updateUser = (req, res) => {
-  res.json({message: 'User item updated.'});
+export const updateUser = async (req, res) => {
+  const result = await modifyUser(req.body, req.params.id);
+  result ? res.json(result) : res.sendStatus(400);
 };
 
-export const deleteUser = (req, res) => {
-  res.json({message: 'User item deleted.'});
+export const deleteUser = async (req, res) => {
+  const result = await removeUser(req.params.id);
+  result ? res.json(result) : res.sendStatus(400);
 };

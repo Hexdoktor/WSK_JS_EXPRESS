@@ -1,5 +1,7 @@
 import multer from 'multer';
 import express from 'express';
+import {createThumbnail} from '../../middlewares/upload.js';
+
 import {
   getCats,
   getCatById,
@@ -14,19 +16,7 @@ const router = express.Router();
 
 router.get('/', getCats);
 router.get('/:id', getCatById);
-router.post(
-  '/',
-  (req, res, next) => {
-    console.log('MULTER DID RUN');
-    next();
-  },
-  upload.single('cat'),
-  (req, res, next) => {
-    console.log('AFTER MULTER:', req.body, req.file);
-    next();
-  },
-  addCat
-);
+router.post('/', upload.single('cat'), createThumbnail, addCat);
 router.put('/:id', updateCat);
 router.delete('/:id', deleteCat);
 

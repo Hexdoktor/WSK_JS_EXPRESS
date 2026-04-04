@@ -4,8 +4,10 @@ import {
   listAllCats,
   findCatById,
   addCat as addCatToDb,
-  modifyCat,
-  removeCat,
+  modifyCatByOwner,
+  modifyCatAdmin,
+  removeCatByOwner,
+  removeCatAdmin,
 } from '../models/catModel.js';
 
 export const getCats = async (req, res) => {
@@ -40,11 +42,41 @@ export const addCat = async (req, res) => {
 };
 
 export const updateCat = async (req, res) => {
-  const result = await modifyCat(req.body, req.params.id);
-  result ? res.json(result) : res.sendStatus(400);
+  const user = res.locals.user;
+  const catId = req.params.id;
+
+  try {
+    let result;
+
+    if (user.role === 'admin') {
+      result = await modifyCatAdmin(req.body, catId);
+    } else {
+      result = await modifyCatByOwner(req.body, catId, user.user_id);
+    }
+
+    result ? res.json(result) : res.sendStatus(403);
+  } catch (error) {
+    console.error('updateCat error:', error);
+    res.sendStatus(500);
+  }
 };
 
 export const deleteCat = async (req, res) => {
-  const result = await removeCat(req.params.id);
-  result ? res.json(result) : res.sendStatus(400);
+  const user = res.locals.user;
+  const catId = req.params.id;
+
+  try {
+    let result;
+
+    if (user.role === 'admin') {
+      result = await removeCatAdmin(catId);
+    } else {
+      result = await removeCatByOwner(catId, user.user_id);
+    }
+
+    result ? res.json(result) : res.sendStatus(403);
+  } catch (error) {
+    console.error('deleteCat error:', error);
+    res.sendStatus(500);
+  }
 };

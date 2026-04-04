@@ -37,13 +37,43 @@ export const addCat = async (cat) => {
   return result.affectedRows ? {cat_id: result.insertId} : false;
 };
 
-export const modifyCat = async (cat, id) => {
-  const sql = promisePool.format(`UPDATE wsk_cats SET ? WHERE cat_id = ?`, [
-    cat,
-    id,
-  ]);
+export const modifyCatByOwner = async (cat, catId, ownerId) => {
+  const sql = `
+    UPDATE wsk_cats
+    SET ?
+    WHERE cat_id = ? AND owner = ?
+  `;
+  const formatted = promisePool.format(sql, [cat, catId, ownerId]);
+  const [result] = await promisePool.execute(formatted);
+  return result.affectedRows ? {message: 'success'} : false;
+};
 
-  const [result] = await promisePool.execute(sql);
+export const modifyCatAdmin = async (cat, catId) => {
+  const sql = `
+    UPDATE wsk_cats
+    SET ?
+    WHERE cat_id = ?
+  `;
+  const formatted = promisePool.format(sql, [cat, catId]);
+  const [result] = await promisePool.execute(formatted);
+  return result.affectedRows ? {message: 'success'} : false;
+};
+
+export const removeCatByOwner = async (catId, ownerId) => {
+  const sql = `
+    DELETE FROM wsk_cats
+    WHERE cat_id = ? AND owner = ?
+  `;
+  const [result] = await promisePool.execute(sql, [catId, ownerId]);
+  return result.affectedRows ? {message: 'success'} : false;
+};
+
+export const removeCatAdmin = async (catId) => {
+  const sql = `
+    DELETE FROM wsk_cats
+    WHERE cat_id = ?
+  `;
+  const [result] = await promisePool.execute(sql, [catId]);
   return result.affectedRows ? {message: 'success'} : false;
 };
 

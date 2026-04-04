@@ -10,6 +10,7 @@ import {
   updateCat,
   deleteCat,
 } from '../controllers/catController.js';
+import {authenticateToken} from '../../middlewares/authentication.js';
 
 const upload = multer({dest: 'uploads/'});
 
@@ -18,8 +19,14 @@ const router = express.Router();
 router.get('/', getCats);
 router.get('/:id', getCatById);
 router.get('/user/:id', getCatsByUser);
-router.post('/', upload.single('cat'), createThumbnail, addCat);
-router.put('/:id', updateCat);
-router.delete('/:id', deleteCat);
+router.post(
+  '/',
+  upload.single('cat'),
+  authenticateToken,
+  createThumbnail,
+  addCat
+);
+router.put('/:id', authenticateToken, updateCat);
+router.delete('/:id', authenticateToken, deleteCat);
 
 export default router;

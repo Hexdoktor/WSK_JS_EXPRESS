@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import {
   listAllUsers,
   findUserById,
@@ -17,16 +18,42 @@ export const getUserById = async (req, res) => {
 };
 
 export const addUser = async (req, res) => {
-  const result = await addUserToDb(req.body);
-  result ? res.status(201).json(result) : res.sendStatus(400);
+  try {
+    req.body.password = bcrypt.hashSync(req.body.password, 10);
+
+    const result = await addUserToDb(req.body);
+
+    if (!result) {
+      return res.sendStatus(400);
+    }
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('addUser error', error);
+    res.sendStatus(400);
+  }
 };
 
 export const updateUser = async (req, res) => {
-  const result = await modifyUser(req.body, req.params.id);
+  const user = res.locals.user;
+  const targetId = Number(req.params.id);
+
+  if (user.user_id !== targetId && user.role !== 'admin') {
+    return res.sendStatus(403);
+  }
+
+  const result = await modifyUser(req.body, targetId);
   result ? res.json(result) : res.sendStatus(400);
 };
 
 export const deleteUser = async (req, res) => {
-  const result = await removeUser(req.params.id);
+  const user = res.locals.user;
+  const targetId = Number(req.params.id);
+
+  if (user.user_id !== targetId && user.role !== 'admin') {
+    return res.sendStatus(403);
+  }
+
+  const result = await removeUser(targetId);
   result ? res.json(result) : res.sendStatus(400);
 };

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import {notFoundHandler, errorHandler} from './middlewares/error-handlers.js';
 import catRoutes from './api/routes/catRoutes.js';
 import userRoutes from './api/routes/userRoutes.js';
 import authRoutes from './api/routes/authRoutes.js';
@@ -13,6 +14,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(notFoundHandler);
+app.use(errorHandler);
 app.use(cors());
 app.use(express.json());
 

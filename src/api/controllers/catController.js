@@ -10,42 +10,78 @@ import {
   removeCatAdmin,
 } from '../models/catModel.js';
 
-export const getCats = async (req, res) => {
-  const cats = await listAllCats();
-  res.json(cats);
-};
-
-export const getCatById = async (req, res) => {
-  const cat = await findCatById(req.params.id);
-  cat ? res.json(cat) : res.sendStatus(404);
-};
-
-export const getCatsByUser = async (req, res) => {
-  const [rows] = await promisePool.execute(
-    `SELECT * FROM wsk_cats WHERE owner = ?`,
-    [req.params.id]
-  );
-  res.json(rows);
-};
-
-export const addCat = async (req, res) => {
-  const cat = {
-    cat_name: req.body.name,
-    weight: req.body.weight,
-    owner: req.body.owner,
-    filename: req.file?.filename || null,
-    birthdate: req.body.birthdate,
-  };
-
-  const result = await addCatToDb(cat);
-  result ? res.status(201).json(result) : res.sendStatus(400);
-};
-
-export const updateCat = async (req, res) => {
-  const user = res.locals.user;
-  const catId = req.params.id;
-
+export const getCats = async (req, res, next) => {
   try {
+    const cats = await listAllCats();
+    res.json(cats);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCatById = async (req, res, next) => {
+  try {
+    const cat = await findCatById(req.params.id);
+
+    if (!cat) {
+      const error = new Error('Cat not found');
+      error.status = 404;
+      return next(error);
+    }
+
+    res.json(cat);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCatsByUser = async (req, res, next) => {
+  try {
+    const [rows] = await promisePool.execute(
+      `SELECT * FROM wsk_cats WHERE owner = ?`,
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const addCat = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      const error = new Error('Invalid or missing file');
+      error.status = 400;
+      return next(error);
+    }
+
+    const cat = {
+      cat_name: req.body.name,
+      weight: req.body.weight,
+      owner: req.body.owner,
+      filename: req.file?.filename || null,
+      birthdate: req.body.birthdate,
+    };
+
+    const result = await addCatToDb(cat);
+
+    if (!result) {
+      const error = new Error('Failed to add cat');
+      error.status = 400;
+      return next(error);
+    }
+
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCat = async (req, res, next) => {
+  try {
+    const user = res.locals.user;
+    const catId = req.params.id;
+
     let result;
 
     if (user.role === 'admin') {
@@ -54,18 +90,23 @@ export const updateCat = async (req, res) => {
       result = await modifyCatByOwner(req.body, catId, user.user_id);
     }
 
-    result ? res.json(result) : res.sendStatus(403);
-  } catch (error) {
-    console.error('updateCat error:', error);
-    res.sendStatus(500);
+    if (!result) {
+      const error = new Error('Forbidden or cat not found');
+      error.status = 403;
+      return next(error);
+    }
+
+    res.json(result);
+  } catch (err) {
+    next(err);
   }
 };
 
-export const deleteCat = async (req, res) => {
-  const user = res.locals.user;
-  const catId = req.params.id;
-
+export const deleteCat = async (req, res, next) => {
   try {
+    const user = res.locals.user;
+    const catId = req.params.id;
+
     let result;
 
     if (user.role === 'admin') {
@@ -74,9 +115,14 @@ export const deleteCat = async (req, res) => {
       result = await removeCatByOwner(catId, user.user_id);
     }
 
-    result ? res.json(result) : res.sendStatus(403);
-  } catch (error) {
-    console.error('deleteCat error:', error);
-    res.sendStatus(500);
+    if (!result) {
+      const error = new Error('Forbidden or cat not found');
+      error.status = 403;
+      return next(error);
+    }
+
+    res.json(result);
+  } catch (err) {
+    next(err);
   }
 };

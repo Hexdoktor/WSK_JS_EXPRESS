@@ -1,6 +1,7 @@
-import multer from 'multer';
 import express from 'express';
-import {createThumbnail} from '../../middlewares/upload.js';
+import {upload, createThumbnail} from '../../middlewares/upload.js';
+import {body} from 'express-validator';
+import {validationErrors} from '../../middlewares/error-handlers.js';
 
 import {
   getCats,
@@ -10,23 +11,38 @@ import {
   updateCat,
   deleteCat,
 } from '../controllers/catController.js';
-import {authenticateToken} from '../../middlewares/authentication.js';
 
-const upload = multer({dest: 'uploads/'});
+import {authenticateToken} from '../../middlewares/authentication.js';
 
 const router = express.Router();
 
 router.get('/', getCats);
 router.get('/:id', getCatById);
 router.get('/user/:id', getCatsByUser);
+
 router.post(
   '/',
-  upload.single('cat'),
   authenticateToken,
+  upload.single('file'),
   createThumbnail,
+  body('name').trim().isLength({min: 3, max: 50}),
+  body('weight').isNumeric(),
+  body('owner').isInt(),
+  body('birthdate').isISO8601(),
+  validationErrors,
   addCat
 );
-router.put('/:id', authenticateToken, updateCat);
+
+router.put(
+  '/:id',
+  authenticateToken,
+  body('name').optional().trim().isLength({min: 3, max: 50}),
+  body('weight').optional().isNumeric(),
+  body('birthdate').optional().isISO8601(),
+  validationErrors,
+  updateCat
+);
+
 router.delete('/:id', authenticateToken, deleteCat);
 
 export default router;

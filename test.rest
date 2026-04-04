@@ -1,74 +1,227 @@
-# store token here after login
-@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0NSwibmFtZSI6IkpvaG4gRG9lIiwidXNlcm5hbWUiOiJKb2huRG9lIiwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NzUzMDQ0ODQsImV4cCI6MTc3NTM5MDg4NH0.HY-DL4c7dXLte6OizXCkIHeKM36wmdAfQNYW4yc9kt0
 
-### CREATE USER
-POST http://localhost:3000/api/v1/users
-content-type: application/json
-
-{
-  "name": "John Doe",
-  "username": "JohnDoe",
-  "email": "john@example.com",
-  "password": "to-be-hashed-pw1",
-  "role": "user"
-}
-
-
-#### LOGIN
+### LOGIN (valid)
 POST http://localhost:3000/api/v1/auth/login
-content-type: application/json
+Content-Type: application/json
 
 {
   "username": "JohnDoe",
-  "password": "to-be-hashed-pw1"
+  "password": "password123"
+}
+
+### LOGIN (invalid password)
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "JohnDoe",
+  "password": "wrong"
+}
+
+### LOGIN (missing fields)
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
 }
 
 
-#### GET AUTHENTICATED USER INFO
-GET http://localhost:3000/api/v1/auth/me
+
+### GET ALL USERS
+GET http://localhost:3000/api/v1/users
+
+### GET USER BY ID (valid)
+GET http://localhost:3000/api/v1/users/1
+
+### GET USER BY ID (not found)
+GET http://localhost:3000/api/v1/users/99999
+
+### CREATE USER (valid)
+POST http://localhost:3000/api/v1/users
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "username": "newuser123",
+  "password": "supersecret123"
+}
+
+### CREATE USER (invalid email)
+POST http://localhost:3000/api/v1/users
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "username": "abc",
+  "password": "password123"
+}
+
+### CREATE USER (missing fields)
+POST http://localhost:3000/api/v1/users
+Content-Type: application/json
+
+{
+}
+
+### UPDATE USER (valid)
+PUT http://localhost:3000/api/v1/users/45
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "updated@example.com"
+}
+
+### UPDATE USER (forbidden)
+PUT http://localhost:3000/api/v1/users/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "nope@example.com"
+}
+
+### DELETE USER (valid)
+DELETE http://localhost:3000/api/v1/users/45
 Authorization: Bearer {{token}}
 
+### DELETE USER (forbidden)
+DELETE http://localhost:3000/api/v1/users/1
+Authorization: Bearer {{token}}
 
+###############################################
+# CATS
+###############################################
 
-#### CREATE A CAT
+### GET ALL CATS
+GET http://localhost:3000/api/v1/cats
+
+### GET CAT BY ID (valid)
+GET http://localhost:3000/api/v1/cats/1
+
+### GET CAT BY ID (not found)
+GET http://localhost:3000/api/v1/cats/99999
+
+### GET CATS BY USER
+GET http://localhost:3000/api/v1/cats/user/45
+
+###############################################
+# ADD CAT (valid)
+###############################################
+
 POST http://localhost:3000/api/v1/cats
 Authorization: Bearer {{token}}
-Content-Type: multipart/form-data; boundary=MyBoundary
+Content-Type: multipart/form-data; boundary=boundary
 
---MyBoundary
+--boundary
+Content-Disposition: form-data; name="file"; filename="cat.jpg"
+Content-Type: image/jpeg
+
+< ./cat.jpg
+--boundary
 Content-Disposition: form-data; name="name"
 
-Mirri
---MyBoundary
+Misu
+--boundary
 Content-Disposition: form-data; name="weight"
 
-6
---MyBoundary
+5
+--boundary
 Content-Disposition: form-data; name="owner"
 
 45
---MyBoundary
+--boundary
 Content-Disposition: form-data; name="birthdate"
 
-2023-10-08
---MyBoundary
-Content-Disposition: form-data; name="cat"; filename="dog.jpg"
-Content-Type: image/jpeg
+2020-01-01
+--boundary--
 
-< ./dog.jpg
---MyBoundary--
+###############################################
+# ADD CAT (missing file)
+###############################################
 
-
-#### UPDATE CAT
-PUT http://localhost:3000/api/v1/cats/57
+POST http://localhost:3000/api/v1/cats
 Authorization: Bearer {{token}}
-content-type: application/json
+Content-Type: application/json
 
 {
-  "weight": 7
+  "name": "NoFileCat",
+  "weight": 4,
+  "owner": 45,
+  "birthdate": "2020-01-01"
 }
 
+###############################################
+# ADD CAT (invalid file type)
+###############################################
 
-#### DELETE CAT
+POST http://localhost:3000/api/v1/cats
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="bad.txt"
+Content-Type: text/plain
+
+This is not an image.
+--boundary
+Content-Disposition: form-data; name="name"
+
+BadCat
+--boundary
+Content-Disposition: form-data; name="weight"
+
+4
+--boundary
+Content-Disposition: form-data; name="owner"
+
+45
+--boundary
+Content-Disposition: form-data; name="birthdate"
+
+2020-01-01
+--boundary--
+
+###############################################
+# UPDATE CAT (valid)
+###############################################
+
+PUT http://localhost:3000/api/v1/cats/57
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "UpdatedCat",
+  "weight": 6
+}
+
+###############################################
+# UPDATE CAT (forbidden)
+###############################################
+
+PUT http://localhost:3000/api/v1/cats/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "NotAllowed"
+}
+
+###############################################
+# DELETE CAT (valid)
+###############################################
+
 DELETE http://localhost:3000/api/v1/cats/57
 Authorization: Bearer {{token}}
+
+###############################################
+# DELETE CAT (forbidden)
+###############################################
+
+DELETE http://localhost:3000/api/v1/cats/1
+Authorization: Bearer {{token}}
+
+###############################################
+# NOT FOUND ROUTE
+###############################################
+
+GET http://localhost:3000/api/v1/this/does/not/exist
